@@ -1,8 +1,6 @@
 package com.rk.kafka.kafkaexample.config;
 
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -14,13 +12,9 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
-import org.springframework.kafka.listener.MessageListener;
-import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 @EnableKafka
 @Configuration
@@ -41,6 +35,14 @@ public class KafkaConfig {
                 new StringDeserializer());
     }
 
+    @Bean
+    public KafkaTemplate<String, String> createTemplate() {
+        Map<String, Object> senderProps = senderProps();
+        ProducerFactory<String, String> pf = getKafkaProducerFactory(senderProps);
+        KafkaTemplate<String, String> template = new KafkaTemplate<>(pf);
+        return template;
+    }
+
 
     private KafkaMessageListenerContainer<Integer, String> createContainer(
             ContainerProperties containerProps) {
@@ -52,14 +54,6 @@ public class KafkaConfig {
         return container;
     }
 
-    @Bean
-    public KafkaTemplate<String, String> createTemplate() {
-        Map<String, Object> senderProps = senderProps();
-        ProducerFactory<String, String> pf = getKafkaProducerFactory(senderProps);
-        KafkaTemplate<String, String> template = new KafkaTemplate<>(pf);
-        return template;
-    }
-
     private ProducerFactory<String, String> getKafkaProducerFactory(Map<String, Object> senderProps) {
         return new DefaultKafkaProducerFactory<String, String>(senderProps);
     }
@@ -67,7 +61,7 @@ public class KafkaConfig {
     private Map<String, Object> consumerProps() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        //props.put(ConsumerConfig.GROUP_ID_CONFIG, group);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "group-1");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
         props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "100");
         props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "15000");
